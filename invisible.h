@@ -18,6 +18,8 @@ int unblock_socket(int socket);
 int restore_socket(int socket, int original_settings);
 
 mlrStatus connect_socket(int socket, const struct sockaddr *addr, socklen_t addrlen);
+int socket_writer(mlrConn *conn, const char *data, int data_len);
+int socket_reader(mlrConn *conn, char *buffer, int buffer_len);
 
 /** in ssl.c */
 void write_ssl_connect_warning(FILE *f, SSL *ssl);

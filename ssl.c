@@ -66,6 +66,8 @@ mlrStatus open_ssl_handle(mlrSSL *handle, int socket)
 
             if (connect_outcome == -1)
             {
+               if (verbose_printer)
+                  (*verbose_printer)("SUCCESS: prepared SSL handle .\n");
 #ifdef DEBUG
                debug_write_ssl_connect_warning(stderr, ssl);
 #else
@@ -76,6 +78,9 @@ mlrStatus open_ssl_handle(mlrSSL *handle, int socket)
             {
                handle->context = context;
                handle->ssl = ssl;
+
+               if (verbose_printer)
+                  (*verbose_printer)("SUCCESS: prepared SSL handle .\n");
 
                // Return before code that frees ssl and context.
                return MLR_SUCCESS;

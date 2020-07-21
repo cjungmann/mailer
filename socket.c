@@ -33,6 +33,16 @@ int restore_socket(int socket, int original_settings)
    return fcntl(socket, F_SETFL, original_settings);
 }
 
+int socket_writer(mlrConn *conn, const char *data, int data_len)
+{
+   return send(conn->socket, data, data_len, 0);
+}
+
+int socket_reader(mlrConn *conn, char *buffer, int buffer_len)
+{
+   return recv(conn->socket, buffer, buffer_len, 0);
+}
+
 
 /** Called by mlr_get_connected_socket() to attempt to connect to a socket. */
 mlrStatus connect_socket(int socket, const struct sockaddr *addr, socklen_t addrlen)

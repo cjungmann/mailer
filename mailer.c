@@ -2,6 +2,42 @@
 #include "invisible.h"
 
 #include <string.h>    // for strlen()
+#include <ctype.h>     // for isdigit()
+
+#include <stdarg.h>    // for variable number of arguments
+
+
+EXPORT int mlr_connection_send(mlrConn *conn, const char *data, int data_len)
+{
+   return (*conn->sender)(conn, data, data_len);
+}
+
+EXPORT int mlr_connection_send_string(mlrConn *conn, const char *str)
+{
+   return (*conn->sender)(conn, str, strlen(str));
+}
+
+EXPORT int mlr_connection_send_concat_line(mlrConn *conn, ...)
+{
+   int count = 0;
+   va_list ap;
+   const char *str;
+   va_start(ap, conn);
+
+   while ((str = va_arg(ap, const char *)))
+      count += mlr_connection_send_string(conn, str);
+
+   count += mlr_connection_send(conn, "\n", 1);
+
+   va_end(ap);
+
+   return count;
+}
+
+EXPORT int mlr_connection_read(mlrConn *conn, char *buffer, int buffer_len)
+{
+   return (*conn->reader)(conn, buffer, buffer_len);
+}
 
 verbose_printer_t verbose_printer = NULL;
 
@@ -24,7 +60,8 @@ EXPORT mlrStatus mlr_open_connection(mlrConn *connection,
                                      int host_port,
                                      const char *user,
                                      const char *password,
-                                     int ssl)
+                                     int ssl,
+                                     int smtp)
 {
    int socket;
 
@@ -38,27 +75,96 @@ EXPORT mlrStatus mlr_open_connection(mlrConn *connection,
    }
    else
    {
-      status = open_ssl_handle(&connection->handle, socket);
+      connection->socket = socket;
+      connection->sender = socket_writer;
+      connection->reader = socket_reader;
 
-      if (status)
+      if (ssl)
       {
-         if (verbose_printer)
-            (*verbose_printer)("FAIL: getting SSL handle, %s,\n", mlr_get_status_string(status));
+         if (smtp)
+         {
+            mlr_connection_send(connection, "EHLO ", 5);
+            mlr_connection_send(connection, host_url, strlen(host_url));
+         }
 
-         close(socket);
-         return status;
-      }
-      else
-      {
-         if (verbose_printer)
-            (*verbose_printer)("SUCCESS: got SSL handle.\n");
+         status = open_ssl_handle(&connection->handle, socket);
+
+         if (status)
+         {
+            if (verbose_printer)
+               (*verbose_printer)("FAIL: getting SSL handle, %s,\n", mlr_get_status_string(status));
+
+            close(socket);
+            return status;
+         }
+         else
+         {
+            if (verbose_printer)
+               (*verbose_printer)("SUCCESS: got SSL handle.\n");
+         }
       }
 
-      close(socket);
-      return MLR_SUCCESS;
+      return status;
    }
 }
 
-EXPORT void mlr_close_xcom(mlrXCom *xcom)
+int confirm_smtp_line_form(const char *line, const char *line_end)
 {
+   const char *ptr = line;
+   const char*dash_or_space = &line[3];
+
+   while (ptr < dash_or_space)
+   {
+      if (!isdigit(*ptr))
+         return 0;
+      ++ptr;
+   }
+
+   return *dash_or_space == ' ' || *dash_or_space == '-';
 }
+
+EXPORT int mlr_get_smtp_line(LRScope *scope,
+                             int *code,
+                             int *final_line,
+                             const char **line,
+                             const char **line_end)
+{
+   const char *tline;
+   const char *tline_end;
+
+   if (ctt_get_line(scope, &tline, &tline_end))
+   {
+      if (confirm_smtp_line_form(tline, tline_end))
+      {
+         *code = atoi(tline);
+         *line = &tline[4];
+         *line_end = tline_end;
+         *final_line = tline[3] == ' ';
+         return 1;
+      }
+   }
+
+   return 0;
+}
+
+EXPORT void mlr_close_connection(mlrConn *connection)
+{
+   if (connection->handle.ssl)
+   {
+      SSL_free(connection->handle.ssl);
+      connection->handle.ssl = NULL;
+   }
+
+   if (connection->handle.context)
+   {
+      SSL_CTX_free(connection->handle.context);
+      connection->handle.context = NULL;
+   }
+
+   if (connection->socket >= 0)
+   {
+      close(connection->socket);
+      connection->socket = -1;
+   }
+}
+

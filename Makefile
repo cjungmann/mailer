@@ -1,6 +1,6 @@
 CFLAGS = -Wall -Werror -pedantic -m64
 LIBFLAGS = -fPIC -shared -fvisibility=hidden
-LIBLIBS = -lssl -lcrypto
+LIBLIBS = -lssl -lcrypto -lctt
 
 TSTUB = mailer
 TARGET = lib$(TSTUB).so
@@ -31,7 +31,7 @@ $(TARGET): $(OBJ_FILES)
 
 # Make test programs that use the library
 test%: test%.c
-	$(CC) $(CFLAGS) -I. -o $@ $< -Wl,-R -Wl,. $(TARGET) -lreadargs
+	$(CC) $(CFLAGS) -I. -o $@ $< -Wl,-R -Wl,. $(TARGET) -lreadargs -lctt
 
 .PHONY: install
 install:

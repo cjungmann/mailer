@@ -13,6 +13,9 @@
 
 extern verbose_printer_t verbose_printer;
 
+/** in mailer.c */
+int verbose_print_concat_line(verbose_printer_t printer, ...);
+
 /** in socket.c */
 int unblock_socket(int socket);
 int restore_socket(int socket, int original_settings);
@@ -29,6 +32,15 @@ void close_ssl_handle(mlrSSL *handle);
 
 /** in messages.c */
 int interpret_sockaddr(const struct sockaddr *sa, int *port, char *buffer, int buffer_len);
+
+/** in smtpcaps.c */
+
+typedef struct smtp_keyword
+{
+   const char *name;
+   char index;
+} SKEYW;
+
    
 
 #endif

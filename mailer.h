@@ -26,11 +26,41 @@ typedef enum mlr_status
    MLR_SSL_CONNECTION_SHUTDOWN
 } mlrStatus;
 
+typedef enum {
+   mlr_ci_start_tls =  0,               // STARTTLS
+   mlr_ci_7_bit_mime,                   // 7BITMIME
+   mlr_ci_8_bit_mime,                   // 8BITMIME
+   mlr_ci_authenticated_turn,           // ATRN
+   mlr_ci_binary_mime,                  // BINARYMIME
+   mlr_ci_chunking,                     // CHUNKING
+   mlr_ci_deliver_by,                   // DELIVERYBY
+   mlr_ci_delivery_status_notification, // DSN
+   mlr_ci_enhanced_status_codes,        // ENHANCEDSTATUSCODES
+   mlr_ci_expand,                       // EXPN
+   mlr_ci_extended_turn,                // ETRN
+   mlr_ci_help,                         // HELP
+   mlr_ci_one_message,                  // ONEX
+   mlr_ci_pipelining,                   // PIPELINING
+   mlr_ci_require_tls,                  // REQUIRETLS
+   mlr_ci_smtp_utf8,                    // SMTPUTF8
+   mlr_ci_verbose,                      // VERB
+
+   mlr_ci_last                          // limit value for iterating enums
+} mlrCapsIndex;
+
+
+
 typedef struct mlr_ssl_handle
 {
    SSL_CTX *context;
    SSL     *ssl;
 } mlrSSL;
+
+typedef struct mlr_smtp_caps
+{
+   int      size;
+   uint64_t flags;
+} mlrSmtpCaps;
 
 // Foreward declaration to provide for function pointer types:
 typedef struct mlr_connection mlrConn;
@@ -77,9 +107,14 @@ mlrStatus mlr_open_connection(mlrConn *connection,
 
 int mlr_get_smtp_line(LRScope *scope,
                       int *code,
-                      int *final_line,
                       const char **line,
                       const char **line_end);
+
+int mlr_request_smtp_caps(mlrSmtpCaps *caps, LRScope *scope, mlrConn *comm, const char *url);
+const char *mlr_cap_name_from_index(int index);
+int mlr_seek_cap_index(const char *name, int name_len);
+int mlr_smtp_cap_get(mlrSmtpCaps *caps, int index);
+int mlr_smtp_cap_set(mlrSmtpCaps *caps, int index);
 
 void mlr_close_connection(mlrConn *connection);
 

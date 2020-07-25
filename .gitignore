@@ -1,3 +1,6 @@
 *.o
 *.so
 test_simple
+test_caps
+
+test_run

@@ -41,12 +41,30 @@ EXPORT int mlr_connection_read(mlrConn *conn, char *buffer, int buffer_len)
 
 verbose_printer_t verbose_printer = NULL;
 
+int verbose_print_concat_line(verbose_printer_t printer, ...)
+{
+   int count = 0;
+   va_list ap;
+   const char *str;
+   va_start(ap, printer);
+
+   while ((str = va_arg(ap, const char *)))
+      count += (*printer)(str);
+
+   count += (*printer)("\n");
+
+   va_end(ap);
+
+   return count;
+}
+
 EXPORT verbose_printer_t mlr_set_verbose_reporting(verbose_printer_t printer)
 {
    verbose_printer_t old = verbose_printer;
    verbose_printer = printer;
    return old;
 }
+
 
 EXPORT void mlr_init_connection(mlrConn *conn)
 {
@@ -125,22 +143,27 @@ int confirm_smtp_line_form(const char *line, const char *line_end)
 
 EXPORT int mlr_get_smtp_line(LRScope *scope,
                              int *code,
-                             int *final_line,
                              const char **line,
                              const char **line_end)
 {
    const char *tline;
    const char *tline_end;
 
-   if (ctt_get_line(scope, &tline, &tline_end))
+   if (!scope->eof)
    {
-      if (confirm_smtp_line_form(tline, tline_end))
+      if (ctt_get_line(scope, &tline, &tline_end))
       {
-         *code = atoi(tline);
-         *line = &tline[4];
-         *line_end = tline_end;
-         *final_line = tline[3] == ' ';
-         return 1;
+         if (confirm_smtp_line_form(tline, tline_end))
+         {
+            *code = atoi(tline);
+            *line = &tline[4];
+            *line_end = tline_end;
+
+            if (tline[3] == ' ')
+               scope->eof = 1;
+
+            return 1;
+         }
       }
    }
 

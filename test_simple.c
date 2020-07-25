@@ -34,39 +34,38 @@ int process_connection(mlrConn *conn, const char *url, const char *user)
    char buffer[2048];
    LRScope scope;
 
+   FILE *fout = stdout;
    const char *greeting = "EHLO";
 
    // "return" parameter variables
    int code;
-   int final_line;
    const char *line;
    const char *line_end;
    
    // Get connection response
    ctt_init_line_reader(&scope, buffer, sizeof(buffer), connection_reader, conn);
 
-   while (mlr_get_smtp_line(&scope, &code, &final_line, &line, &line_end))
+   fputs("[32;1m", fout);
+   while (mlr_get_smtp_line(&scope, &code, &line, &line_end))
    {
-      fwrite(line, 1, line_end - line, stdout);
-      fputc('\n', stdout);
-
-      if (final_line)
-         break;
+      fwrite(line, 1, line_end - line, fout);
+      fputc('\n', fout);
    }
+   fputs("[m", fout);
 
    if (show_verbose)
       printf("Initializing connection with \"%s %s\"\n", greeting, url);
 
    mlr_connection_send_concat_line(conn, greeting, " ", url, NULL);
 
-   while (mlr_get_smtp_line(&scope, &code, &final_line, &line, &line_end))
+   fputs("[32;1m", fout);
+   ctt_reset_line_reader(&scope);
+   while (mlr_get_smtp_line(&scope, &code, &line, &line_end))
    {
-      fwrite(line, 1, line_end - line, stdout);
-      fputc('\n', stdout);
-
-      if (final_line)
-         break;
+      fwrite(line, 1, line_end - line, fout);
+      fputc('\n', fout);
    }
+   fputs("[m", fout);
 
    if (show_verbose)
       printf("Finished reading from server.\n");

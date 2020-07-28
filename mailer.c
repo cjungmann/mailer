@@ -39,8 +39,11 @@ EXPORT int mlr_connection_read(mlrConn *conn, char *buffer, int buffer_len)
    return (*conn->reader)(conn, buffer, buffer_len);
 }
 
+
+/* Global variable that both flags and services verbose messaging. */
 verbose_printer_t verbose_printer = NULL;
 
+/* Convenience function for constructing a verbose output line. */
 int verbose_print_concat_line(verbose_printer_t printer, ...)
 {
    int count = 0;
@@ -65,7 +68,6 @@ EXPORT verbose_printer_t mlr_set_verbose_reporting(verbose_printer_t printer)
    return old;
 }
 
-
 EXPORT void mlr_init_connection(mlrConn *conn)
 {
    conn->socket         = -1;
@@ -73,17 +75,11 @@ EXPORT void mlr_init_connection(mlrConn *conn)
    conn->handle.ssl     = NULL;
 }
 
-EXPORT mlrStatus mlr_open_connection(mlrConn *connection,
-                                     const char *host_url,
-                                     int host_port,
-                                     const char *user,
-                                     const char *password,
-                                     int ssl,
-                                     int smtp)
+EXPORT mlrStatus mlr_open_connection(mlrConn *connection, const mlrConnReq *req)
 {
    int socket;
 
-   mlrStatus status = mlr_get_connected_socket(&socket, host_url, host_port);
+   mlrStatus status = mlr_get_connected_socket(&socket, req->host_url, req->host_port);
    if (status)
    {
       if (verbose_printer)
@@ -97,12 +93,11 @@ EXPORT mlrStatus mlr_open_connection(mlrConn *connection,
       connection->sender = socket_writer;
       connection->reader = socket_reader;
 
-      if (ssl)
+      if (req->ssl)
       {
-         if (smtp)
+         if (req->smtp)
          {
-            mlr_connection_send(connection, "EHLO ", 5);
-            mlr_connection_send(connection, host_url, strlen(host_url));
+            mlr_connection_send_concat_line(connection, "EHLO ", req->host_url, NULL);
          }
 
          status = open_ssl_handle(&connection->handle, socket);

@@ -48,7 +48,15 @@ typedef enum {
    mlr_ci_last                          // limit value for iterating enums
 } mlrCapsIndex;
 
-
+typedef struct mlr_connection_request
+{
+   const char *host_url;
+   int         host_port;
+   const char *user;
+   const char *password;
+   int ssl;
+   int smtp;
+} mlrConnReq;
 
 typedef struct mlr_ssl_handle
 {
@@ -56,6 +64,7 @@ typedef struct mlr_ssl_handle
    SSL     *ssl;
 } mlrSSL;
 
+/* Bit-mapped SMTP capability flags along with message size limit. */
 typedef struct mlr_smtp_caps
 {
    int      size;
@@ -97,13 +106,7 @@ const char *mlr_get_status_string(mlrStatus status);
 void mlr_init_connection(mlrConn *conn);
 mlrStatus mlr_get_connected_socket(int *socket, const char *host_url, int host_port);
 
-mlrStatus mlr_open_connection(mlrConn *connection,
-                              const char *host_url,
-                              int host_port,
-                              const char *user,
-                              const char *password,
-                              int ssl,
-                              int smtp);
+mlrStatus mlr_open_connection(mlrConn *connection, const mlrConnReq *req);
 
 int mlr_get_smtp_line(LRScope *scope,
                       int *code,

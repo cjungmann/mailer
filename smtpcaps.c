@@ -121,8 +121,21 @@ EXPORT int mlr_request_smtp_caps(mlrSmtpCaps *caps, LRScope *scope, mlrConn *con
                char *temp = (char*)alloca(line_len + 1);
                memcpy(temp, line, line_len);
                temp[line_len] = '\0';
+
+               if (NULL == strchr(temp, ' '))
+               {
+                  char codebuff[4];
+                  sprintf(codebuff, "%d", code);
+                  verbose_print_concat_line(verbose_printer,
+                                            "Unknown SMTP verb \"",
+                                            temp,
+                                            "\" (",
+                                            codebuff,
+                                            ")",
+                                            NULL);
+               }
+
                
-               verbose_print_concat_line(verbose_printer, "Unknown SMTP verb \"", temp, "\"");
             }
          }
       }

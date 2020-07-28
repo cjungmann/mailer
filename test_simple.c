@@ -25,9 +25,15 @@ raOpt options[] = {
 
 int process_connection(mlrConn *conn, const char *url, const char *user)
 {
+   // We need the line_reader to pass to mlr_get_smtp_line(), parses the line.
    char buffer[2048];
    LRScope scope;
-
+   ctt_init_line_reader(&scope,
+                        buffer,
+                        sizeof(buffer),
+                        mlr_connection_line_reader,
+                        conn);
+ 
    FILE *fout = stdout;
    const char *greeting = "EHLO";
 
@@ -36,9 +42,6 @@ int process_connection(mlrConn *conn, const char *url, const char *user)
    const char *line;
    const char *line_end;
    
-   // Get connection response
-   ctt_init_line_reader(&scope, buffer, sizeof(buffer), mlr_connection_line_reader, conn);
-
    fputs("[32;1m", fout);
    while (mlr_get_smtp_line(&scope, &code, &line, &line_end))
    {

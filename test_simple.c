@@ -23,12 +23,6 @@ raOpt options[] = {
    {'S', "ssl/tls",  NULL,     "Use SSL/TLS",           &ra_flag_agent,       &use_ssl }
 };
 
-int connection_reader(void *source, char *buffer, int bytes_to_read)
-{
-   mlrConn *conn = (mlrConn*)source;
-   return mlr_connection_read(conn, buffer, bytes_to_read);
-}
-
 int process_connection(mlrConn *conn, const char *url, const char *user)
 {
    char buffer[2048];
@@ -43,7 +37,7 @@ int process_connection(mlrConn *conn, const char *url, const char *user)
    const char *line_end;
    
    // Get connection response
-   ctt_init_line_reader(&scope, buffer, sizeof(buffer), connection_reader, conn);
+   ctt_init_line_reader(&scope, buffer, sizeof(buffer), mlr_connection_line_reader, conn);
 
    fputs("[32;1m", fout);
    while (mlr_get_smtp_line(&scope, &code, &line, &line_end))

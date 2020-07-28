@@ -65,6 +65,12 @@ int process_connection(mlrConn *conn, const char *url, const char *user)
       }
 
       mlr_request_smtp_caps(&caps, &scope, conn, url);
+
+      if (mlr_smtp_cap_get(&caps, mlr_ci_start_tls))
+      {
+         
+      }
+
       report_smtp_caps(&caps);
    }
    else
@@ -86,9 +92,10 @@ int main(int argc, const char **argv)
       if (show_verbose)
          mlr_set_verbose_reporting(printf);
 
+      mlrConnReq req = { host_url, host_port, user_name, password, use_ssl };
       mlrConn conn;
       mlr_init_connection(&conn);
-      if (mlr_open_connection(&conn, host_url, host_port, user_name, password, use_ssl, 0))
+      if (mlr_open_connection(&conn, &req))
          printf("Failed to make a connection.\n");
       else
       {

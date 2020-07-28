@@ -83,9 +83,10 @@ int main(int argc, const char **argv)
       if (show_verbose)
          mlr_set_verbose_reporting(printf);
 
+      mlrConnReq req = { host_url, host_port, user_name, password, use_ssl };
       mlrConn conn;
       mlr_init_connection(&conn);
-      if (mlr_open_connection(&conn, host_url, host_port, user_name, password, use_ssl, 0))
+      if (mlr_open_connection(&conn, &req))
          printf("Failed to make a connection.\n");
       else
       {

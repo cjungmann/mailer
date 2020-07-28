@@ -26,6 +26,7 @@ raOpt options[] = {
 void report_smtp_caps(mlrSmtpCaps *caps)
 {
    int index = 0;
+   printf("cap size: %d.\n", caps->size);
    while (index < mlr_ci_last)
    {
       if (mlr_smtp_cap_get(caps, index))

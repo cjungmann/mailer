@@ -136,6 +136,13 @@ int confirm_smtp_line_form(const char *line, const char *line_end)
    return *dash_or_space == ' ' || *dash_or_space == '-';
 }
 
+/* For function pointer argument of line_reader in ctt library. */
+EXPORT int mlr_connection_line_reader(void *source, char *buffer, int bytes_to_read)
+{
+   mlrConn *conn = (mlrConn*)source;
+   return mlr_connection_read(conn, buffer, bytes_to_read);
+}
+
 EXPORT int mlr_get_smtp_line(LRScope *scope,
                              int *code,
                              const char **line,

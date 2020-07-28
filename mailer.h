@@ -108,6 +108,9 @@ mlrStatus mlr_get_connected_socket(int *socket, const char *host_url, int host_p
 
 mlrStatus mlr_open_connection(mlrConn *connection, const mlrConnReq *req);
 
+int mlr_connection_line_reader(void *source, char *buffer, int bytes_to_read);
+
+
 int mlr_get_smtp_line(LRScope *scope,
                       int *code,
                       const char **line,

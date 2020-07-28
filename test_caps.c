@@ -36,8 +36,14 @@ void report_smtp_caps(mlrSmtpCaps *caps)
 
 int process_connection(mlrConn *conn, const char *url, const char *user)
 {
+   // We need the line_reader to pass to mlr_get_smtp_line(), parses the line.
    char buffer[2048];
    LRScope scope;
+   ctt_init_line_reader(&scope,
+                        buffer,
+                        sizeof(buffer),
+                        mlr_connection_line_reader,
+                        conn);
 
    mlrSmtpCaps caps;
 
@@ -45,9 +51,6 @@ int process_connection(mlrConn *conn, const char *url, const char *user)
    int code;
    const char *line;
    const char *line_end;
-   
-   // Get connection response
-   ctt_init_line_reader(&scope, buffer, sizeof(buffer), mlr_connection_line_reader, conn);
 
    // Read, but don't report server response unless there's an error:
    if (mlr_get_smtp_line(&scope, &code, &line, &line_end))
@@ -59,11 +62,6 @@ int process_connection(mlrConn *conn, const char *url, const char *user)
       }
 
       mlr_request_smtp_caps(&caps, &scope, conn, url);
-
-      if (mlr_smtp_cap_get(&caps, mlr_ci_start_tls))
-      {
-         
-      }
 
       report_smtp_caps(&caps);
    }
